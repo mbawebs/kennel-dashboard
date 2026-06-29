@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kennel Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <a class="brand" href="#dashboard" data-route="dashboard" aria-label="Kennel Dashboard home">
+        <span class="brand-mark">K</span>
+        <span>
+          <strong>Kennel</strong>
+          <small>Dashboard</small>
+        </span>
+      </a>
+
+      <nav class="side-nav">
+        <button class="nav-item is-active" type="button" data-route="dashboard">
+          <span class="nav-icon">01</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" type="button" data-route="dogs">
+          <span class="nav-icon">02</span>
+          <span>Dogs</span>
+        </button>
+        <button class="nav-item" type="button" data-route="puppies">
+          <span class="nav-icon">03</span>
+          <span>Puppies</span>
+        </button>
+        <button class="nav-item" type="button" data-route="breedings">
+          <span class="nav-icon">04</span>
+          <span>Breedings</span>
+        </button>
+        <button class="nav-item" type="button" data-route="productions">
+          <span class="nav-icon">05</span>
+          <span>Productions</span>
+        </button>
+        <button class="nav-item" type="button" data-route="website">
+          <span class="nav-icon">06</span>
+          <span>Website</span>
+        </button>
+        <button class="nav-item" type="button" data-route="customers">
+          <span class="nav-icon">07</span>
+          <span>Customers</span>
+        </button>
+        <button class="nav-item" type="button" data-route="settings">
+          <span class="nav-icon">08</span>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-panel">
+        <span class="status-dot"></span>
+        <div>
+          <strong>System ready</strong>
+          <small>Static prototype</small>
+        </div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="top-header">
+        <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div>
+          <p class="eyebrow" id="pageEyebrow">Kennel operations</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <div class="search-box" role="search">
+            <span aria-hidden="true">S</span>
+            <input type="search" placeholder="Search records" aria-label="Search records" />
+          </div>
+          <a class="profile-pill" href="login.html" aria-label="Open login placeholder">
+            <span>Admin</span>
+            <strong>MB</strong>
+          </a>
+        </div>
+      </header>
+
+      <main class="content" id="appContent" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
