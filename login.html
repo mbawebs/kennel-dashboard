@@ -9,16 +9,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
-<body class="login-page">
+<body class="login-page auth-loading" data-auth-page="login">
   <main class="login-card">
     <span class="brand-mark">K</span>
     <h1>Kennel Dashboard</h1>
-    <p>This is a polished login placeholder. Authentication is intentionally not connected yet.</p>
+    <p>Sign in with your kennel administrator email and password.</p>
 
-    <div class="login-actions">
-      <a class="button primary" href="index.html">Open dashboard</a>
-      <a class="button" href="index.html#settings">Settings</a>
-    </div>
+    <form class="login-form" id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+      <p class="auth-message" id="authMessage" hidden></p>
+
+      <div class="login-actions">
+        <button class="button primary" type="submit">Sign in</button>
+      </div>
+    </form>
   </main>
+
+  <script type="module" src="assets/js/auth.js"></script>
 </body>
 </html>
