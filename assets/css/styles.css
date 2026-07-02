@@ -643,6 +643,45 @@ h1 {
   resize: vertical;
 }
 
+.stud-form .home-toggle,
+.content-form .home-toggle {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+}
+
+.home-toggle__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.stud-form .home-toggle input[type="checkbox"],
+.content-form .home-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.home-toggle__hint {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .stud-form input:focus,
 .stud-form select:focus,
 .stud-form textarea:focus,
