@@ -4,7 +4,6 @@ import { supabase } from "./supabase.js";
 Breeder content modules.
 
 This file implements:
-- females
 - productions
 - breedings
 - available
@@ -127,19 +126,6 @@ using (bucket_id = 'dog-photos');
 const PHOTO_BUCKET = "dog-photos";
 
 const MODULES = {
-  females: {
-    table: "females",
-    title: "Females",
-    required: ["name", "age", "color", "description"],
-    optional: ["pedigree_url"],
-    fields: [
-      { name: "name", type: "text" },
-      { name: "age", type: "number" },
-      { name: "color", type: "text" },
-      { name: "description", type: "text" },
-      { name: "pedigree_url", type: "text" }
-    ]
-  },
   productions: {
     table: "productions",
     title: "Productions",

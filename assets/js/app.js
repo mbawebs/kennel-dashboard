@@ -187,19 +187,103 @@ const routes = {
   females: {
     title: "Females",
     eyebrow: "Female roster",
-    render: () => renderBreederModule({
-      route: "females",
-      title: "Females",
-      eyebrow: "Female database",
-      description: "Add, edit, delete, and upload gallery photos for females.",
-      fields: [
-        { name: "name", label: "Name", type: "text", required: true },
-        { name: "age", label: "Age", type: "number", required: true, attrs: 'min="0" step="1"' },
-        { name: "color", label: "Color", type: "text", required: true },
-        { name: "pedigree_url", label: "Pedigree URL", type: "url", optional: true, attrs: 'placeholder="https://example.com/pedigree"' },
-        { name: "description", label: "Description", type: "textarea", required: true }
-      ]
-    })
+    render: () => `
+      <section class="module-shell females-module" data-module="females">
+        <div class="module-header">
+          <div>
+            <p class="eyebrow">Female database</p>
+            <h2>Manage females</h2>
+            <p>Add, edit, delete, reorder, and upload gallery photos for females stored in the Supabase females table.</p>
+          </div>
+          <button class="button" type="button" data-female-action="refresh">Refresh</button>
+        </div>
+
+        <div class="module-grid">
+          <form class="panel stud-form" id="femaleForm">
+            <input type="hidden" id="femaleId" name="id" />
+            <div class="form-heading">
+              <h3 id="femaleFormTitle">Add Female</h3>
+              <button class="button ghost" type="button" data-female-action="reset">Clear</button>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Name
+                <textarea name="name" rows="2" required></textarea>
+              </label>
+              <label>
+                Age <span class="optional-label">Optional</span>
+                <input name="age" type="number" min="0" step="1" />
+              </label>
+              <label>
+                Color <span class="optional-label">Optional</span>
+                <input name="color" type="text" />
+              </label>
+              <label>
+                Lineage / Parents <span class="optional-label">Optional</span>
+                <input name="lineage" type="text" placeholder="PBK Hellboy × GB Mystic" />
+              </label>
+              <label>
+                Pedigree URL <span class="optional-label">Optional</span>
+                <input name="pedigree_url" type="url" placeholder="https://example.com/pedigree" />
+              </label>
+            </div>
+
+            <label>
+              Description
+              <textarea name="description" rows="4" required></textarea>
+            </label>
+
+            <label>
+              Photos
+              <input id="femalePhotos" name="photos" type="file" accept="image/*" multiple />
+            </label>
+
+            <div class="photo-preview photo-grid-preview" id="femalePhotoPreview">
+              <span>No photos selected</span>
+            </div>
+
+            <p class="auth-message" id="femaleMessage" hidden></p>
+
+            <div class="form-actions">
+              <button class="button primary" type="submit">Save female</button>
+              <button class="button" type="button" data-female-action="reset">Cancel</button>
+            </div>
+          </form>
+
+          <section class="panel studs-list-panel">
+            <div class="form-heading">
+              <h3>Females list</h3>
+              <span class="tag" id="femalesCount">0 females</span>
+            </div>
+
+            <div class="setup-note" id="femalesSetupNote" hidden>
+              <strong>Supabase schema update required</strong>
+              <span>The Females UI uses the existing <code>females</code> table.</span>
+            </div>
+
+            <div class="table-shell">
+              <table class="data-table studs-table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Female</th>
+                    <th>Age</th>
+                    <th>Color</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="femalesTableBody">
+                  <tr>
+                    <td colspan="5">Loading females...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    `
   },
   productions: {
     title: "Productions",
