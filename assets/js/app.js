@@ -288,16 +288,93 @@ const routes = {
   productions: {
     title: "Productions",
     eyebrow: "Production history",
-    render: () => renderBreederModule({
-      route: "productions",
-      title: "Productions",
-      eyebrow: "Production database",
-      description: "Add production records with photo galleries and simple optional details.",
-      fields: [
-        { name: "description", label: "Description", type: "textarea", optional: true },
-        { name: "pedigree_url", label: "Pedigree URL", type: "url", optional: true, attrs: 'placeholder="https://example.com/pedigree"' }
-      ]
-    })
+    render: () => `
+      <section class="module-shell productions-module" data-module="productions">
+        <div class="module-header">
+          <div>
+            <p class="eyebrow">Production database</p>
+            <h2>Manage productions</h2>
+            <p>Add, edit, delete, reorder, and upload gallery photos for productions stored in the Supabase productions table.</p>
+          </div>
+          <button class="button" type="button" data-production-action="refresh">Refresh</button>
+        </div>
+
+        <div class="module-grid">
+          <form class="panel stud-form" id="productionForm">
+            <input type="hidden" id="productionId" name="id" />
+            <div class="form-heading">
+              <h3 id="productionFormTitle">Add Production</h3>
+              <button class="button ghost" type="button" data-production-action="reset">Clear</button>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Name
+                <textarea name="name" rows="2" required></textarea>
+              </label>
+              <label>
+                Lineage / Parents <span class="optional-label">Optional</span>
+                <input name="lineage" type="text" placeholder="PBK Hellboy × GB Mystic" />
+              </label>
+              <label>
+                Pedigree URL <span class="optional-label">Optional</span>
+                <input name="pedigree_url" type="url" placeholder="https://example.com/pedigree" />
+              </label>
+            </div>
+
+            <label>
+              Description <span class="optional-label">Optional</span>
+              <textarea name="description" rows="4"></textarea>
+            </label>
+
+            <label>
+              Photos
+              <input id="productionPhotos" name="photos" type="file" accept="image/*" multiple />
+            </label>
+
+            <div class="photo-preview photo-grid-preview" id="productionPhotoPreview">
+              <span>No photos selected</span>
+            </div>
+
+            <p class="auth-message" id="productionMessage" hidden></p>
+
+            <div class="form-actions">
+              <button class="button primary" type="submit">Save production</button>
+              <button class="button" type="button" data-production-action="reset">Cancel</button>
+            </div>
+          </form>
+
+          <section class="panel studs-list-panel">
+            <div class="form-heading">
+              <h3>Productions list</h3>
+              <span class="tag" id="productionsCount">0 productions</span>
+            </div>
+
+            <div class="setup-note" id="productionsSetupNote" hidden>
+              <strong>Supabase schema update required</strong>
+              <span>The Productions UI uses the existing <code>productions</code> table.</span>
+            </div>
+
+            <div class="table-shell">
+              <table class="data-table studs-table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Production</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="productionsTableBody">
+                  <tr>
+                    <td colspan="3">Loading productions...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    `
   },
   breedings: {
     title: "Breedings",

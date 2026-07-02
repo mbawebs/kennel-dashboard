@@ -4,7 +4,6 @@ import { supabase } from "./supabase.js";
 Breeder content modules.
 
 This file implements:
-- productions
 - breedings
 - available
 - gallery
@@ -22,14 +21,6 @@ create table if not exists public.females (
   description text not null,
   pedigree_url text,
   photos text[] not null default '{}',
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.productions (
-  id uuid primary key default gen_random_uuid(),
-  photos text[] not null default '{}',
-  description text,
-  pedigree_url text,
   created_at timestamptz not null default now()
 );
 
@@ -59,7 +50,6 @@ create table if not exists public.gallery (
 );
 
 alter table public.females enable row level security;
-alter table public.productions enable row level security;
 alter table public.breedings enable row level security;
 alter table public.available enable row level security;
 alter table public.gallery enable row level security;
@@ -91,7 +81,7 @@ using (true);
 Storage:
 
 Use the existing public bucket named dog-photos. These modules upload into
-folder paths such as females/, productions/, breedings/, available/, gallery/.
+folder paths such as females/, breedings/, available/, gallery/.
 
 If the bucket does not exist yet:
 
@@ -126,16 +116,6 @@ using (bucket_id = 'dog-photos');
 const PHOTO_BUCKET = "dog-photos";
 
 const MODULES = {
-  productions: {
-    table: "productions",
-    title: "Productions",
-    required: [],
-    optional: ["description", "pedigree_url"],
-    fields: [
-      { name: "description", type: "text" },
-      { name: "pedigree_url", type: "text" }
-    ]
-  },
   breedings: {
     table: "breedings",
     title: "Breedings",
