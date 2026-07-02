@@ -4,8 +4,6 @@ import { supabase } from "./supabase.js";
 Breeder content modules.
 
 This file implements:
-- breedings
-- available
 - gallery
 
 All modules use the existing Supabase client and the existing dog-photos bucket.
@@ -116,29 +114,6 @@ using (bucket_id = 'dog-photos');
 const PHOTO_BUCKET = "dog-photos";
 
 const MODULES = {
-  breedings: {
-    table: "breedings",
-    title: "Breedings",
-    required: [],
-    optional: ["description"],
-    fields: [
-      { name: "description", type: "text" }
-    ]
-  },
-  available: {
-    table: "available",
-    title: "Available",
-    required: ["price", "color"],
-    optional: ["age", "name", "description", "pedigree_url"],
-    fields: [
-      { name: "price", type: "text" },
-      { name: "color", type: "text" },
-      { name: "age", type: "number" },
-      { name: "name", type: "text" },
-      { name: "description", type: "text" },
-      { name: "pedigree_url", type: "text" }
-    ]
-  },
   gallery: {
     table: "gallery",
     title: "Gallery",
@@ -266,10 +241,13 @@ function coerceValue(value, type) {
   return String(value || "").trim();
 }
 
-function getPayload(route, form, photoUrls) {
+function getPayload(route, form, photoUrls, homeOrder = 100) {
   const config = MODULES[route];
   const formData = new FormData(form);
+  const normalizedHomeOrder = Number(homeOrder);
   const payload = {
+    show_on_home: formData.get("show_on_home") === "on",
+    home_order: Number.isFinite(normalizedHomeOrder) ? normalizedHomeOrder : 100,
     photos: photoUrls
   };
 
@@ -348,6 +326,7 @@ function renderRecords(route) {
   tableBody.innerHTML = moduleState.records.map((record) => {
     const photos = normalizePhotos(record);
     const firstPhoto = photos[0];
+    const homeBadge = record.show_on_home ? '<span class="tag">HOME</span>' : "";
     const fieldCells = config.fields.map((field) => {
       const value = field.type === "number" && record[field.name] != null
         ? Number(record[field.name]).toLocaleString()
@@ -363,6 +342,7 @@ function renderRecords(route) {
             ${firstPhoto ? `<img src="${escapeHtml(firstPhoto)}" alt="${escapeHtml(config.title)} photo" />` : "<span>No photo</span>"}
           </div>
           <small>${photos.length} ${photos.length === 1 ? "photo" : "photos"}</small>
+          ${homeBadge}
         </td>
         ${fieldCells}
         <td>
@@ -546,7 +526,7 @@ async function saveRecord(route, event) {
   try {
     const uploadedPhotos = await uploadPhotos(route, selectedFiles);
     const photoUrls = [...existingPhotos, ...uploadedPhotos];
-    const payload = getPayload(route, form, photoUrls);
+    const payload = getPayload(route, form, photoUrls, existingRecord?.home_order ?? 100);
     const operation = id ? `${route} update` : `${route} insert`;
     const request = id
       ? supabase.from(config.table).update(payload).eq("id", id).select().single()
@@ -587,6 +567,7 @@ function editRecord(route, id) {
   config.fields.forEach((field) => {
     form.elements[field.name].value = record[field.name] ?? "";
   });
+  form.elements.show_on_home.checked = Boolean(record.show_on_home);
 
   if (photoInput) {
     photoInput.value = "";

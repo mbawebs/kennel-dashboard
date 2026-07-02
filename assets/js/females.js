@@ -146,10 +146,11 @@ function showPhotoPreview(urls = []) {
     .join("");
 }
 
-function getFormPayload(form, photoUrls, displayOrder = 100) {
+function getFormPayload(form, photoUrls, displayOrder = 100, homeOrder = 100) {
   const formData = new FormData(form);
   const age = String(formData.get("age") || "").trim();
   const normalizedDisplayOrder = Number(displayOrder);
+  const normalizedHomeOrder = Number(homeOrder);
   const payload = {
     name: String(formData.get("name") || ""),
     age: age ? Number(age) : null,
@@ -157,6 +158,8 @@ function getFormPayload(form, photoUrls, displayOrder = 100) {
     description: String(formData.get("description") || "").trim(),
     lineage: String(formData.get("lineage") || "").trim() || null,
     display_order: Number.isFinite(normalizedDisplayOrder) ? normalizedDisplayOrder : 100,
+    show_on_home: formData.get("show_on_home") === "on",
+    home_order: Number.isFinite(normalizedHomeOrder) ? normalizedHomeOrder : 100,
     status: "active",
     photos: photoUrls
   };
@@ -221,6 +224,7 @@ function renderFemales() {
     const photos = normalizePhotos(female);
     const firstPhoto = photos[0];
     const name = female.name || "Unnamed female";
+    const homeBadge = female.show_on_home ? '<span class="tag">HOME</span>' : "";
 
     return `
       <tr data-female-row-id="${escapeHtml(female.id)}" draggable="true">
@@ -233,6 +237,7 @@ function renderFemales() {
         </td>
         <td>
           <strong>${escapeHtml(name)}</strong>
+          ${homeBadge}
           ${female.lineage ? `<small>${escapeHtml(female.lineage)}</small>` : ""}
           ${female.pedigree_url ? `<small>${escapeHtml(female.pedigree_url)}</small>` : ""}
         </td>
@@ -475,7 +480,7 @@ async function saveFemale(event) {
     const photoUrls = id
       ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
       : uploadedPhotos;
-    const payload = getFormPayload(form, photoUrls, existingFemale?.display_order ?? 100);
+    const payload = getFormPayload(form, photoUrls, existingFemale?.display_order ?? 100, existingFemale?.home_order ?? 100);
 
     console.info("[Females module] payload before females insert/update", {
       supabaseUrl: SUPABASE_URL,
@@ -527,6 +532,7 @@ function editFemale(id) {
   form.elements.description.value = female.description || "";
   form.elements.pedigree_url.value = female.pedigree_url || "";
   form.elements.lineage.value = female.lineage || "";
+  form.elements.show_on_home.checked = Boolean(female.show_on_home);
 
   if (photoInput) {
     photoInput.value = "";

@@ -133,14 +133,17 @@ function showPhotoPreview(urls = []) {
     .join("");
 }
 
-function getFormPayload(form, photoUrls, displayOrder = 100) {
+function getFormPayload(form, photoUrls, displayOrder = 100, homeOrder = 100) {
   const formData = new FormData(form);
   const normalizedDisplayOrder = Number(displayOrder);
+  const normalizedHomeOrder = Number(homeOrder);
   const payload = {
     name: String(formData.get("name") || ""),
     description: String(formData.get("description") || "").trim() || null,
     lineage: String(formData.get("lineage") || "").trim() || null,
     display_order: Number.isFinite(normalizedDisplayOrder) ? normalizedDisplayOrder : 100,
+    show_on_home: formData.get("show_on_home") === "on",
+    home_order: Number.isFinite(normalizedHomeOrder) ? normalizedHomeOrder : 100,
     status: "active",
     photos: photoUrls
   };
@@ -205,6 +208,7 @@ function renderProductions() {
     const photos = normalizePhotos(production);
     const firstPhoto = photos[0];
     const name = production.name || "Unnamed production";
+    const homeBadge = production.show_on_home ? '<span class="tag">HOME</span>' : "";
 
     return `
       <tr data-production-row-id="${escapeHtml(production.id)}" draggable="true">
@@ -217,6 +221,7 @@ function renderProductions() {
         </td>
         <td>
           <strong>${escapeHtml(name)}</strong>
+          ${homeBadge}
           ${production.lineage ? `<small>${escapeHtml(production.lineage)}</small>` : ""}
           ${production.pedigree_url ? `<small>${escapeHtml(production.pedigree_url)}</small>` : ""}
         </td>
@@ -457,7 +462,7 @@ async function saveProduction(event) {
     const photoUrls = id
       ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
       : uploadedPhotos;
-    const payload = getFormPayload(form, photoUrls, existingProduction?.display_order ?? 100);
+    const payload = getFormPayload(form, photoUrls, existingProduction?.display_order ?? 100, existingProduction?.home_order ?? 100);
 
     console.info("[Productions module] payload before productions insert/update", {
       supabaseUrl: SUPABASE_URL,
@@ -507,6 +512,7 @@ function editProduction(id) {
   form.elements.description.value = production.description || "";
   form.elements.pedigree_url.value = production.pedigree_url || "";
   form.elements.lineage.value = production.lineage || "";
+  form.elements.show_on_home.checked = Boolean(production.show_on_home);
 
   if (photoInput) {
     photoInput.value = "";

@@ -132,6 +132,14 @@ const routes = {
               <textarea name="description" rows="4" required></textarea>
             </label>
 
+            <label class="home-toggle">
+              <span class="home-toggle__row">
+                <input name="show_on_home" type="checkbox" />
+                <span>Show on Home</span>
+              </span>
+              <span class="home-toggle__hint">Feature this item on the homepage.</span>
+            </label>
+
             <label>
               Photos
               <input id="studPhotos" name="photos" type="file" accept="image/*" multiple />
@@ -234,6 +242,14 @@ const routes = {
               <textarea name="description" rows="4" required></textarea>
             </label>
 
+            <label class="home-toggle">
+              <span class="home-toggle__row">
+                <input name="show_on_home" type="checkbox" />
+                <span>Show on Home</span>
+              </span>
+              <span class="home-toggle__hint">Feature this item on the homepage.</span>
+            </label>
+
             <label>
               Photos
               <input id="femalePhotos" name="photos" type="file" accept="image/*" multiple />
@@ -327,6 +343,14 @@ const routes = {
               <textarea name="description" rows="4"></textarea>
             </label>
 
+            <label class="home-toggle">
+              <span class="home-toggle__row">
+                <input name="show_on_home" type="checkbox" />
+                <span>Show on Home</span>
+              </span>
+              <span class="home-toggle__hint">Feature this item on the homepage.</span>
+            </label>
+
             <label>
               Photos
               <input id="productionPhotos" name="photos" type="file" accept="image/*" multiple />
@@ -379,33 +403,194 @@ const routes = {
   breedings: {
     title: "Breedings",
     eyebrow: "Pairing planner",
-    render: () => renderBreederModule({
-      route: "breedings",
-      title: "Breedings",
-      eyebrow: "Breeding database",
-      description: "Add breeding records with photos and an optional description.",
-      fields: [
-        { name: "description", label: "Description", type: "textarea", optional: true }
-      ]
-    })
+    render: () => `
+      <section class="module-shell breedings-module" data-module="breedings">
+        <div class="module-header">
+          <div>
+            <p class="eyebrow">Breeding database</p>
+            <h2>Manage breedings</h2>
+            <p>Add, edit, delete, reorder, and upload gallery photos for breeding records stored in the Supabase breedings table.</p>
+          </div>
+          <button class="button" type="button" data-breeding-action="refresh">Refresh</button>
+        </div>
+
+        <div class="module-grid">
+          <form class="panel stud-form" id="breedingForm">
+            <input type="hidden" id="breedingId" name="id" />
+            <div class="form-heading">
+              <h3 id="breedingFormTitle">Add Breeding</h3>
+              <button class="button ghost" type="button" data-breeding-action="reset">Clear</button>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Title <span class="optional-label">Optional</span>
+                <input name="title" type="text" />
+              </label>
+            </div>
+
+            <label>
+              Description <span class="optional-label">Optional</span>
+              <textarea name="description" rows="4"></textarea>
+            </label>
+
+            <label class="home-toggle">
+              <span class="home-toggle__row">
+                <input name="show_on_home" type="checkbox" />
+                <span>Show on Home</span>
+              </span>
+              <span class="home-toggle__hint">Feature this item on the homepage.</span>
+            </label>
+
+            <label>
+              Photos
+              <input id="breedingPhotos" name="photos" type="file" accept="image/*" multiple />
+            </label>
+
+            <div class="photo-preview photo-grid-preview" id="breedingPhotoPreview">
+              <span>No photos selected</span>
+            </div>
+
+            <p class="auth-message" id="breedingMessage" hidden></p>
+
+            <div class="form-actions">
+              <button class="button primary" type="submit">Save breeding</button>
+              <button class="button" type="button" data-breeding-action="reset">Cancel</button>
+            </div>
+          </form>
+
+          <section class="panel studs-list-panel">
+            <div class="form-heading">
+              <h3>Breedings list</h3>
+              <span class="tag" id="breedingsCount">0 breedings</span>
+            </div>
+
+            <div class="setup-note" id="breedingsSetupNote" hidden>
+              <strong>Supabase schema update required</strong>
+              <span>The Breedings UI uses the existing <code>breedings</code> table.</span>
+            </div>
+
+            <div class="table-shell">
+              <table class="data-table studs-table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Breeding</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="breedingsTableBody">
+                  <tr>
+                    <td colspan="3">Loading breedings...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    `
   },
   available: {
     title: "Available",
     eyebrow: "Available dogs",
-    render: () => renderBreederModule({
-      route: "available",
-      title: "Available",
-      eyebrow: "Available database",
-      description: "Add available listings with photos, price, color, and optional details.",
-      fields: [
-        { name: "price", label: "Price", type: "text", required: true },
-        { name: "color", label: "Color", type: "text", required: true },
-        { name: "age", label: "Age", type: "number", optional: true, attrs: 'min="0" step="1"' },
-        { name: "name", label: "Name", type: "text", optional: true },
-        { name: "description", label: "Description", type: "textarea", optional: true },
-        { name: "pedigree_url", label: "Pedigree URL", type: "url", optional: true, attrs: 'placeholder="https://example.com/pedigree"' }
-      ]
-    })
+    render: () => `
+      <section class="module-shell available-module" data-module="available">
+        <div class="module-header">
+          <div>
+            <p class="eyebrow">Available database</p>
+            <h2>Manage available dogs</h2>
+            <p>Add, edit, delete, reorder, and upload gallery photos for available dogs stored in the Supabase available table.</p>
+          </div>
+          <button class="button" type="button" data-available-action="refresh">Refresh</button>
+        </div>
+
+        <div class="module-grid">
+          <form class="panel stud-form" id="availableForm">
+            <input type="hidden" id="availableId" name="id" />
+            <div class="form-heading">
+              <h3 id="availableFormTitle">Add Available Dog</h3>
+              <button class="button ghost" type="button" data-available-action="reset">Clear</button>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Name
+                <textarea name="name" rows="2" required></textarea>
+              </label>
+              <label>
+                Gender <span class="optional-label">Optional</span>
+                <input name="gender" type="text" />
+              </label>
+              <label>
+                Price <span class="optional-label">Optional</span>
+                <input name="price" type="text" />
+              </label>
+            </div>
+
+            <label>
+              Description <span class="optional-label">Optional</span>
+              <textarea name="description" rows="4"></textarea>
+            </label>
+
+            <label class="home-toggle">
+              <span class="home-toggle__row">
+                <input name="show_on_home" type="checkbox" />
+                <span>Show on Home</span>
+              </span>
+              <span class="home-toggle__hint">Feature this item on the homepage.</span>
+            </label>
+
+            <label>
+              Photos
+              <input id="availablePhotos" name="photos" type="file" accept="image/*" multiple />
+            </label>
+
+            <div class="photo-preview photo-grid-preview" id="availablePhotoPreview">
+              <span>No photos selected</span>
+            </div>
+
+            <p class="auth-message" id="availableMessage" hidden></p>
+
+            <div class="form-actions">
+              <button class="button primary" type="submit">Save available dog</button>
+              <button class="button" type="button" data-available-action="reset">Cancel</button>
+            </div>
+          </form>
+
+          <section class="panel studs-list-panel">
+            <div class="form-heading">
+              <h3>Available list</h3>
+              <span class="tag" id="availableCount">0 available dogs</span>
+            </div>
+
+            <div class="setup-note" id="availableSetupNote" hidden>
+              <strong>Supabase schema update required</strong>
+              <span>The Available UI uses the existing <code>available</code> table.</span>
+            </div>
+
+            <div class="table-shell">
+              <table class="data-table studs-table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Available dog</th>
+                    <th>Gender</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="availableTableBody">
+                  <tr>
+                    <td colspan="5">Loading available dogs...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    `
   },
   gallery: {
     title: "Gallery",
@@ -468,6 +653,14 @@ function renderBreederModule({ route, title: moduleTitle, eyebrow: moduleEyebrow
           </div>
 
           ${fields.length ? `<div class="form-grid">${formFields}</div>` : ""}
+
+          <label class="home-toggle">
+            <span class="home-toggle__row">
+              <input name="show_on_home" type="checkbox" />
+              <span>Show on Home</span>
+            </span>
+            <span class="home-toggle__hint">Feature this item on the homepage.</span>
+          </label>
 
           <label>
             Photos
