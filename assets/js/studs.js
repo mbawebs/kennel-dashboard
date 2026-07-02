@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+import { SUPABASE_URL, supabase } from "./supabase.js";
 
 /*
 Studs module storage model.
@@ -145,11 +145,13 @@ function showPhotoPreview(urls = []) {
 
 function getFormPayload(form, photoUrls) {
   const formData = new FormData(form);
+  const age = String(formData.get("age") || "").trim();
   const payload = {
-    name: String(formData.get("name") || "").trim(),
-    age: Number(formData.get("age")),
+    name: String(formData.get("name") || ""),
+    age: age ? Number(age) : null,
     color: String(formData.get("color") || "").trim(),
     description: String(formData.get("description") || "").trim(),
+    lineage: String(formData.get("lineage") || "").trim(),
     photos: photoUrls
   };
 
@@ -231,6 +233,7 @@ function renderStuds() {
         </td>
         <td>
           <strong>${escapeHtml(stud.name)}</strong>
+          ${stud.lineage ? `<small>${escapeHtml(stud.lineage)}</small>` : ""}
           <small>${escapeHtml(stud.pedigree_url || "No pedigree URL")}</small>
         </td>
         <td>${escapeHtml(stud.age ?? "")}</td>
@@ -287,6 +290,14 @@ function logSupabaseResult(operation, result, context = {}) {
   }
 
   console.info(`[Studs module] Supabase ${operation} succeeded`, payload);
+}
+
+function logStudUploadStep(step, details = {}) {
+  console.info(`[Studs module] ${step}`, {
+    supabaseUrl: SUPABASE_URL,
+    bucket: STUD_PHOTOS_BUCKET,
+    ...details
+  });
 }
 
 function isMissingSupabaseResource(error) {
@@ -353,10 +364,27 @@ async function uploadStudPhotos(files) {
 
   const uploadedUrls = [];
 
+  logStudUploadStep("starting stud photo upload batch", {
+    fileCount: uploads.length,
+    files: uploads.map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type
+    }))
+  });
+
   for (const file of uploads) {
     const extension = file.name.split(".").pop() || "jpg";
     const uniqueId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.round(Math.random() * 100000)}`;
     const path = `studs/${uniqueId}.${extension.toLowerCase()}`;
+
+    logStudUploadStep("calling storage.upload", {
+      path,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
+    });
+
     const result = await supabase.storage
       .from(STUD_PHOTOS_BUCKET)
       .upload(path, file, {
@@ -373,17 +401,32 @@ async function uploadStudPhotos(files) {
       fileSize: file.size
     });
 
+    console.info("[Studs module] storage.upload raw response", {
+      supabaseUrl: SUPABASE_URL,
+      bucket: STUD_PHOTOS_BUCKET,
+      path,
+      uploadData: result.data,
+      uploadError: result.error
+    });
+
     if (error) {
       throw new Error(handleSupabaseError(error, "stud photo upload"));
     }
 
+    const publicPath = result.data?.path || path;
+
     const { data } = supabase.storage
       .from(STUD_PHOTOS_BUCKET)
-      .getPublicUrl(path);
+      .getPublicUrl(publicPath);
 
     console.info("[Studs module] Supabase stud photo public URL generated", {
       bucket: STUD_PHOTOS_BUCKET,
-      path,
+      path: publicPath,
+      publicUrl: data.publicUrl
+    });
+
+    logStudUploadStep("public URL generated", {
+      path: publicPath,
       publicUrl: data.publicUrl
     });
 
@@ -407,8 +450,15 @@ async function saveStud(event) {
   const existingPhotos = existingStud ? normalizePhotos(existingStud) : [];
   const selectedFiles = photoInput?.files || [];
 
-  if (!form.elements.name.value.trim() || !form.elements.age.value || !form.elements.color.value.trim() || !form.elements.description.value.trim()) {
-    setMessage("Name, age, color, and description are required.", "error");
+  logStudUploadStep("saveStud submit received", {
+    mode: id ? "update" : "insert",
+    id: id || null,
+    selectedFileCount: selectedFiles.length,
+    existingPhotoCount: existingPhotos.length
+  });
+
+  if (!form.elements.name.value.trim() || !form.elements.description.value.trim()) {
+    setMessage("Name and description are required.", "error");
     return;
   }
 
@@ -422,8 +472,19 @@ async function saveStud(event) {
 
   try {
     const uploadedPhotos = await uploadStudPhotos(selectedFiles);
-    const photoUrls = [...existingPhotos, ...uploadedPhotos];
+    const photoUrls = id
+      ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
+      : uploadedPhotos;
     const payload = getFormPayload(form, photoUrls);
+
+    console.info("[Studs module] payload before dogs insert/update", {
+      supabaseUrl: SUPABASE_URL,
+      bucket: STUD_PHOTOS_BUCKET,
+      uploadedPhotos,
+      payloadPhotos: payload.photos,
+      payload
+    });
+
     const operation = id ? "studs update dogs row" : "studs insert dogs row";
     const request = id
       ? supabase.from("dogs").update(payload).eq("id", id).select().single()
@@ -466,6 +527,7 @@ function editStud(id) {
   form.elements.description.value = stud.description || "";
   form.elements.pedigree_url.value = stud.pedigree_url || "";
   form.elements.stud_fee.value = stud.stud_fee ?? "";
+  form.elements.lineage.value = stud.lineage || "";
 
   if (photoInput) {
     photoInput.value = "";

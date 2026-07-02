@@ -103,19 +103,23 @@ const routes = {
             <div class="form-grid">
               <label>
                 Name
-                <input name="name" type="text" required />
+                <textarea name="name" rows="2" required></textarea>
               </label>
               <label>
-                Age
-                <input name="age" type="number" min="0" step="1" required />
+                Age <span class="optional-label">Optional</span>
+                <input name="age" type="number" min="0" step="1" />
               </label>
               <label>
-                Color
-                <input name="color" type="text" required />
+                Color <span class="optional-label">Optional</span>
+                <input name="color" type="text" />
               </label>
               <label>
                 Stud fee <span class="optional-label">Optional</span>
                 <input name="stud_fee" type="text" />
+              </label>
+              <label>
+                Lineage / Parents <span class="optional-label">Optional</span>
+                <input name="lineage" type="text" placeholder="PBK Hellboy × GB Mystic" />
               </label>
               <label>
                 Pedigree URL <span class="optional-label">Optional</span>
