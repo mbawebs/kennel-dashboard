@@ -144,10 +144,11 @@ function showPhotoPreview(urls = []) {
     .join("");
 }
 
-function getFormPayload(form, photoUrls, displayOrder = 100) {
+function getFormPayload(form, photoUrls, displayOrder = 100, homeOrder = 100) {
   const formData = new FormData(form);
   const age = String(formData.get("age") || "").trim();
   const normalizedDisplayOrder = Number(displayOrder);
+  const normalizedHomeOrder = Number(homeOrder);
   const payload = {
     name: String(formData.get("name") || ""),
     age: age ? Number(age) : null,
@@ -155,6 +156,8 @@ function getFormPayload(form, photoUrls, displayOrder = 100) {
     description: String(formData.get("description") || "").trim(),
     lineage: String(formData.get("lineage") || "").trim() || null,
     display_order: Number.isFinite(normalizedDisplayOrder) ? normalizedDisplayOrder : 100,
+    show_on_home: formData.get("show_on_home") === "on",
+    home_order: Number.isFinite(normalizedHomeOrder) ? normalizedHomeOrder : 100,
     photos: photoUrls
   };
 
@@ -219,6 +222,7 @@ function renderStuds() {
     const photos = normalizePhotos(stud);
     const firstPhoto = photos[0];
     const fee = stud.stud_fee || "Not listed";
+    const homeBadge = stud.show_on_home ? '<span class="tag">HOME</span>' : "";
 
     return `
       <tr data-stud-row-id="${escapeHtml(stud.id)}" draggable="true">
@@ -231,6 +235,7 @@ function renderStuds() {
         </td>
         <td>
           <strong>${escapeHtml(stud.name)}</strong>
+          ${homeBadge}
           ${stud.lineage ? `<small>${escapeHtml(stud.lineage)}</small>` : ""}
           <small>${escapeHtml(stud.pedigree_url || "No pedigree URL")}</small>
         </td>
@@ -474,7 +479,7 @@ async function saveStud(event) {
     const photoUrls = id
       ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
       : uploadedPhotos;
-    const payload = getFormPayload(form, photoUrls, existingStud?.display_order ?? 100);
+    const payload = getFormPayload(form, photoUrls, existingStud?.display_order ?? 100, existingStud?.home_order ?? 100);
 
     console.info("[Studs module] payload before dogs insert/update", {
       supabaseUrl: SUPABASE_URL,
@@ -527,6 +532,7 @@ function editStud(id) {
   form.elements.pedigree_url.value = stud.pedigree_url || "";
   form.elements.stud_fee.value = stud.stud_fee ?? "";
   form.elements.lineage.value = stud.lineage || "";
+  form.elements.show_on_home.checked = Boolean(stud.show_on_home);
 
   if (photoInput) {
     photoInput.value = "";
