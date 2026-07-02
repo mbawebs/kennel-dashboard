@@ -65,6 +65,7 @@ banner can be uploaded as part of the regular stud photo gallery.
 const STUD_PHOTOS_BUCKET = "dog-photos";
 let studs = [];
 let isInitialized = false;
+let draggedStudId = "";
 
 function getElements() {
   return {
@@ -143,28 +144,24 @@ function showPhotoPreview(urls = []) {
     .join("");
 }
 
-function getFormPayload(form, photoUrls) {
+function getFormPayload(form, photoUrls, displayOrder = 100) {
   const formData = new FormData(form);
   const age = String(formData.get("age") || "").trim();
+  const normalizedDisplayOrder = Number(displayOrder);
   const payload = {
     name: String(formData.get("name") || ""),
     age: age ? Number(age) : null,
-    color: String(formData.get("color") || "").trim(),
+    color: String(formData.get("color") || "").trim() || null,
     description: String(formData.get("description") || "").trim(),
-    lineage: String(formData.get("lineage") || "").trim(),
+    lineage: String(formData.get("lineage") || "").trim() || null,
+    display_order: Number.isFinite(normalizedDisplayOrder) ? normalizedDisplayOrder : 100,
     photos: photoUrls
   };
 
   const pedigreeUrl = String(formData.get("pedigree_url") || "").trim();
   const studFee = String(formData.get("stud_fee") || "").trim();
-
-  if (pedigreeUrl) {
-    payload.pedigree_url = pedigreeUrl;
-  }
-
-  if (studFee) {
-    payload.stud_fee = studFee;
-  }
+  payload.pedigree_url = pedigreeUrl || null;
+  payload.stud_fee = studFee || null;
 
   return payload;
 }
@@ -224,8 +221,9 @@ function renderStuds() {
     const fee = stud.stud_fee || "Not listed";
 
     return `
-      <tr>
+      <tr data-stud-row-id="${escapeHtml(stud.id)}" draggable="true">
         <td>
+          <button class="button compact ghost" type="button" data-stud-drag-handle draggable="true" aria-label="Drag stud to reorder" title="Drag to reorder" style="cursor: grab;">&#8942;&#8942;</button>
           <div class="stud-thumb">
             ${firstPhoto ? `<img src="${escapeHtml(firstPhoto)}" alt="${escapeHtml(stud.name)} photo" />` : "<span>No photo</span>"}
           </div>
@@ -339,6 +337,7 @@ async function loadStuds() {
   const result = await supabase
     .from("dogs")
     .select("*")
+    .order("display_order", { ascending: true })
     .order("created_at", { ascending: false });
   const { data, error } = result;
 
@@ -475,7 +474,7 @@ async function saveStud(event) {
     const photoUrls = id
       ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
       : uploadedPhotos;
-    const payload = getFormPayload(form, photoUrls);
+    const payload = getFormPayload(form, photoUrls, existingStud?.display_order ?? 100);
 
     console.info("[Studs module] payload before dogs insert/update", {
       supabaseUrl: SUPABASE_URL,
@@ -594,6 +593,98 @@ async function deletePhotosByUrls(urls) {
   });
 }
 
+async function saveStudOrder(draggedId, targetId, placeAfterTarget = false) {
+  if (!draggedId || !targetId || draggedId === targetId) {
+    return;
+  }
+
+  const movedStud = studs.find((stud) => stud.id === draggedId);
+  const targetIndex = studs.findIndex((stud) => stud.id === targetId);
+
+  if (!movedStud || targetIndex === -1) {
+    return;
+  }
+
+  const reorderedStuds = studs.filter((stud) => stud.id !== draggedId);
+  const targetIndexAfterRemoval = reorderedStuds.findIndex((stud) => stud.id === targetId);
+  const insertIndex = placeAfterTarget ? targetIndexAfterRemoval + 1 : targetIndexAfterRemoval;
+  reorderedStuds.splice(insertIndex, 0, movedStud);
+  studs = reorderedStuds;
+  renderStuds();
+
+  setMessage("Saving stud order...", "info");
+
+  try {
+    const results = await Promise.all(
+      reorderedStuds.map((stud, index) =>
+        supabase
+          .from("dogs")
+          .update({ display_order: index + 1 })
+          .eq("id", stud.id)
+      )
+    );
+
+    results.forEach((result, index) => {
+      logSupabaseResult("studs update display_order", result, {
+        id: reorderedStuds[index].id,
+        display_order: index + 1
+      });
+    });
+
+    const failedResult = results.find((result) => result.error);
+
+    if (failedResult) {
+      throw new Error(handleSupabaseError(failedResult.error, "studs update display_order"));
+    }
+
+    setMessage("Stud order updated.", "info");
+    await loadStuds();
+  } catch (error) {
+    setMessage(error.message, "error");
+  }
+}
+
+function handleStudDragStart(event) {
+  const handle = event.target.closest("[data-stud-drag-handle]");
+  const row = event.target.closest("[data-stud-row-id]");
+
+  if (!handle || !row) {
+    event.preventDefault();
+    return;
+  }
+
+  draggedStudId = row.dataset.studRowId;
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", draggedStudId);
+}
+
+function handleStudDragOver(event) {
+  if (!draggedStudId || !event.target.closest("[data-stud-row-id]")) {
+    return;
+  }
+
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+}
+
+function handleStudDrop(event) {
+  const row = event.target.closest("[data-stud-row-id]");
+
+  if (!draggedStudId || !row) {
+    return;
+  }
+
+  event.preventDefault();
+  const rowBounds = row.getBoundingClientRect();
+  const placeAfterTarget = event.clientY > rowBounds.top + rowBounds.height / 2;
+  saveStudOrder(draggedStudId, row.dataset.studRowId, placeAfterTarget);
+  draggedStudId = "";
+}
+
+function handleStudDragEnd() {
+  draggedStudId = "";
+}
+
 function handleModuleClick(event) {
   const actionButton = event.target.closest("[data-stud-action]");
 
@@ -627,7 +718,7 @@ function handlePhotoPreview(event) {
 }
 
 function initStudsModule() {
-  const { module, form, photoInput } = getElements();
+  const { module, form, photoInput, tableBody } = getElements();
 
   if (!module || isInitialized) {
     return;
@@ -637,6 +728,10 @@ function initStudsModule() {
   form?.addEventListener("submit", saveStud);
   module.addEventListener("click", handleModuleClick);
   photoInput?.addEventListener("change", handlePhotoPreview);
+  tableBody?.addEventListener("dragstart", handleStudDragStart);
+  tableBody?.addEventListener("dragover", handleStudDragOver);
+  tableBody?.addEventListener("drop", handleStudDrop);
+  tableBody?.addEventListener("dragend", handleStudDragEnd);
   loadStuds();
 }
 
