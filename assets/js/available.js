@@ -1,6 +1,14 @@
 import { SUPABASE_URL, supabase } from "./supabase.js";
 
 const AVAILABLE_PHOTOS_BUCKET = "dog-photos";
+const PUBLIC_SITE_ORIGIN = "https://onedongazabullie.com/";
+
+function getDisplayPhotoUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  return new URL(value.replace(/^\/+/, ""), PUBLIC_SITE_ORIGIN).href;
+}
 let availableDogs = [];
 let isInitialized = false;
 let draggedAvailableId = "";
@@ -78,7 +86,7 @@ function showPhotoPreview(urls = []) {
   }
 
   photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(url)}" alt="Selected available dog photo preview" />`)
+    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected available dog photo preview" />`)
     .join("");
 }
 
@@ -161,7 +169,7 @@ function renderAvailable() {
         <td>
           <button class="button compact ghost" type="button" data-available-drag-handle draggable="true" aria-label="Drag available dog to reorder" title="Drag to reorder" style="cursor: grab;">&#8942;&#8942;</button>
           <div class="stud-thumb">
-            ${firstPhoto ? `<img src="${escapeHtml(firstPhoto)}" alt="${escapeHtml(name)} photo" />` : "<span>No photo</span>"}
+            ${firstPhoto ? `<img src="${escapeHtml(getDisplayPhotoUrl(firstPhoto))}" alt="${escapeHtml(name)} photo" />` : "<span>No photo</span>"}
           </div>
           <small>${photos.length} ${photos.length === 1 ? "photo" : "photos"}</small>
         </td>
@@ -663,3 +671,4 @@ window.addEventListener("dashboard:route-change", (event) => {
 if (window.location.hash === "#available") {
   initAvailableModule();
 }
+

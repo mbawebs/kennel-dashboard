@@ -112,6 +112,14 @@ using (bucket_id = 'dog-photos');
 */
 
 const PHOTO_BUCKET = "dog-photos";
+const PUBLIC_SITE_ORIGIN = "https://onedongazabullie.com/";
+
+function getDisplayPhotoUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  return new URL(value.replace(/^\/+/, ""), PUBLIC_SITE_ORIGIN).href;
+}
 
 const MODULES = {
   gallery: {
@@ -216,7 +224,7 @@ function showPhotoPreview(route, urls = []) {
   }
 
   photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(url)}" alt="Selected photo preview" />`)
+    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected photo preview" />`)
     .join("");
 }
 
@@ -339,7 +347,7 @@ function renderRecords(route) {
       <tr>
         <td>
           <div class="content-thumb">
-            ${firstPhoto ? `<img src="${escapeHtml(firstPhoto)}" alt="${escapeHtml(config.title)} photo" />` : "<span>No photo</span>"}
+            ${firstPhoto ? `<img src="${escapeHtml(getDisplayPhotoUrl(firstPhoto))}" alt="${escapeHtml(config.title)} photo" />` : "<span>No photo</span>"}
           </div>
           <small>${photos.length} ${photos.length === 1 ? "photo" : "photos"}</small>
           ${homeBadge}
@@ -693,3 +701,4 @@ const currentRoute = window.location.hash.replace("#", "");
 if (MODULES[currentRoute]) {
   initModule(currentRoute);
 }
+

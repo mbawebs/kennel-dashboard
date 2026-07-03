@@ -1,6 +1,14 @@
 import { SUPABASE_URL, supabase } from "./supabase.js";
 
 const BREEDING_PHOTOS_BUCKET = "dog-photos";
+const PUBLIC_SITE_ORIGIN = "https://onedongazabullie.com/";
+
+function getDisplayPhotoUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  return new URL(value.replace(/^\/+/, ""), PUBLIC_SITE_ORIGIN).href;
+}
 let breedings = [];
 let isInitialized = false;
 let draggedBreedingId = "";
@@ -78,7 +86,7 @@ function showPhotoPreview(urls = []) {
   }
 
   photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(url)}" alt="Selected breeding photo preview" />`)
+    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected breeding photo preview" />`)
     .join("");
 }
 
@@ -162,7 +170,7 @@ function renderBreedings() {
         <td>
           <button class="button compact ghost" type="button" data-breeding-drag-handle draggable="true" aria-label="Drag breeding to reorder" title="Drag to reorder" style="cursor: grab;">&#8942;&#8942;</button>
           <div class="stud-thumb">
-            ${firstPhoto ? `<img src="${escapeHtml(firstPhoto)}" alt="${escapeHtml(title)} photo" />` : "<span>No photo</span>"}
+            ${firstPhoto ? `<img src="${escapeHtml(getDisplayPhotoUrl(firstPhoto))}" alt="${escapeHtml(title)} photo" />` : "<span>No photo</span>"}
           </div>
           <small>${photos.length} ${photos.length === 1 ? "photo" : "photos"}</small>
         </td>
@@ -656,3 +664,4 @@ window.addEventListener("dashboard:route-change", (event) => {
 if (window.location.hash === "#breedings") {
   initBreedingsModule();
 }
+

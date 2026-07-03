@@ -52,6 +52,14 @@ banner can be uploaded as part of the regular Production photo gallery.
 */
 
 const PRODUCTION_PHOTOS_BUCKET = "dog-photos";
+const PUBLIC_SITE_ORIGIN = "https://onedongazabullie.com/";
+
+function getDisplayPhotoUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  return new URL(value.replace(/^\/+/, ""), PUBLIC_SITE_ORIGIN).href;
+}
 let productions = [];
 let isInitialized = false;
 let draggedProductionId = "";
@@ -129,7 +137,7 @@ function showPhotoPreview(urls = []) {
   }
 
   photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(url)}" alt="Selected production photo preview" />`)
+    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected production photo preview" />`)
     .join("");
 }
 
@@ -215,7 +223,7 @@ function renderProductions() {
         <td>
           <button class="button compact ghost" type="button" data-production-drag-handle draggable="true" aria-label="Drag production to reorder" title="Drag to reorder" style="cursor: grab;">&#8942;&#8942;</button>
           <div class="stud-thumb">
-            ${firstPhoto ? `<img src="${escapeHtml(firstPhoto)}" alt="${escapeHtml(name)} photo" />` : "<span>No photo</span>"}
+            ${firstPhoto ? `<img src="${escapeHtml(getDisplayPhotoUrl(firstPhoto))}" alt="${escapeHtml(name)} photo" />` : "<span>No photo</span>"}
           </div>
           <small>${photos.length} ${photos.length === 1 ? "photo" : "photos"}</small>
         </td>
@@ -731,4 +739,5 @@ window.addEventListener("dashboard:route-change", (event) => {
 if (window.location.hash === "#productions") {
   initProductionsModule();
 }
+
 
