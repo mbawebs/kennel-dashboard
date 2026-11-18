@@ -1,3 +1,4 @@
+import { createPhotoOrderEditor } from "./photo-order.js";
 import { SUPABASE_URL, supabase } from "./supabase.js";
 
 /*
@@ -60,6 +61,10 @@ function getDisplayPhotoUrl(url) {
   if (/^(https?:|data:|blob:)/i.test(value)) return value;
   return new URL(value.replace(/^\/+/, ""), PUBLIC_SITE_ORIGIN).href;
 }
+const photoOrderEditor = createPhotoOrderEditor(
+  () => getElements().photoPreview,
+  getDisplayPhotoUrl
+);
 let productions = [];
 let isInitialized = false;
 let draggedProductionId = "";
@@ -125,20 +130,7 @@ function setSetupNote(isVisible) {
 }
 
 function showPhotoPreview(urls = []) {
-  const { photoPreview } = getElements();
-
-  if (!photoPreview) {
-    return;
-  }
-
-  if (!urls.length) {
-    photoPreview.innerHTML = "<span>No photos selected</span>";
-    return;
-  }
-
-  photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected production photo preview" />`)
-    .join("");
+  photoOrderEditor.setExisting(urls);
 }
 
 function getFormPayload(form, photoUrls, displayOrder = 100, homeOrder = 100) {
@@ -467,9 +459,7 @@ async function saveProduction(event) {
 
   try {
     const uploadedPhotos = await uploadProductionPhotos(selectedFiles);
-    const photoUrls = id
-      ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
-      : uploadedPhotos;
+    const photoUrls = [...(id ? photoOrderEditor.getExisting() : []), ...uploadedPhotos];
     const payload = getFormPayload(form, photoUrls, existingProduction?.display_order ?? 100, existingProduction?.home_order ?? 100);
 
     console.info("[Productions module] payload before productions insert/update", {
@@ -707,8 +697,7 @@ function handleModuleClick(event) {
 }
 
 function handlePhotoPreview(event) {
-  const urls = Array.from(event.target.files || []).map((file) => URL.createObjectURL(file));
-  showPhotoPreview(urls);
+  photoOrderEditor.setPending(event.target.files);
 }
 
 function initProductionsModule() {

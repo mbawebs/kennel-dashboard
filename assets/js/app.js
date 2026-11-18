@@ -129,7 +129,7 @@ const routes = {
 
             <label>
               Description
-              <textarea name="description" rows="4" required></textarea>
+              <textarea name="description" rows="4"></textarea>
             </label>
 
             <label class="home-toggle">
@@ -239,7 +239,7 @@ const routes = {
 
             <label>
               Description
-              <textarea name="description" rows="4" required></textarea>
+              <textarea name="description" rows="4"></textarea>
             </label>
 
             <label class="home-toggle">
