@@ -461,8 +461,8 @@ async function saveStud(event) {
     existingPhotoCount: existingPhotos.length
   });
 
-  if (!form.elements.name.value.trim() || !form.elements.description.value.trim()) {
-    setMessage("Name and description are required.", "error");
+  if (!form.elements.name.value.trim()) {
+    setMessage("Name is required.", "error");
     return;
   }
 
