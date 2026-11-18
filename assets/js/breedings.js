@@ -1,3 +1,4 @@
+import { createPhotoOrderEditor } from "./photo-order.js";
 import { SUPABASE_URL, supabase } from "./supabase.js";
 
 const BREEDING_PHOTOS_BUCKET = "dog-photos";
@@ -9,6 +10,10 @@ function getDisplayPhotoUrl(url) {
   if (/^(https?:|data:|blob:)/i.test(value)) return value;
   return new URL(value.replace(/^\/+/, ""), PUBLIC_SITE_ORIGIN).href;
 }
+const photoOrderEditor = createPhotoOrderEditor(
+  () => getElements().photoPreview,
+  getDisplayPhotoUrl
+);
 let breedings = [];
 let isInitialized = false;
 let draggedBreedingId = "";
@@ -74,20 +79,7 @@ function setSetupNote(isVisible) {
 }
 
 function showPhotoPreview(urls = []) {
-  const { photoPreview } = getElements();
-
-  if (!photoPreview) {
-    return;
-  }
-
-  if (!urls.length) {
-    photoPreview.innerHTML = "<span>No photos selected</span>";
-    return;
-  }
-
-  photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected breeding photo preview" />`)
-    .join("");
+  photoOrderEditor.setExisting(urls);
 }
 
 function getFormPayload(form, photoUrls, displayOrder = 100, homeOrder = 100) {
@@ -393,9 +385,7 @@ async function saveBreeding(event) {
 
   try {
     const uploadedPhotos = await uploadBreedingPhotos(selectedFiles);
-    const photoUrls = id
-      ? (uploadedPhotos.length ? uploadedPhotos : existingPhotos)
-      : uploadedPhotos;
+    const photoUrls = [...(id ? photoOrderEditor.getExisting() : []), ...uploadedPhotos];
     const payload = getFormPayload(form, photoUrls, existingBreeding?.display_order ?? 100, existingBreeding?.home_order ?? 100);
 
     console.info("[Breedings module] payload before breedings insert/update", {
@@ -632,8 +622,7 @@ function handleModuleClick(event) {
 }
 
 function handlePhotoPreview(event) {
-  const urls = Array.from(event.target.files || []).map((file) => URL.createObjectURL(file));
-  showPhotoPreview(urls);
+  photoOrderEditor.setPending(event.target.files);
 }
 
 function initBreedingsModule() {

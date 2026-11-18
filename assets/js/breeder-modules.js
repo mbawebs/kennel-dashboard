@@ -1,3 +1,4 @@
+import { createPhotoOrderEditor } from "./photo-order.js";
 import { supabase } from "./supabase.js";
 
 /*
@@ -137,7 +138,8 @@ function getModuleState(route) {
   if (!state[route]) {
     state[route] = {
       records: [],
-      initialized: false
+      initialized: false,
+      photoEditor: createPhotoOrderEditor(() => getElements(route).photoPreview, getDisplayPhotoUrl)
     };
   }
 
@@ -212,20 +214,7 @@ function setSetupNote(route, isVisible) {
 }
 
 function showPhotoPreview(route, urls = []) {
-  const { photoPreview } = getElements(route);
-
-  if (!photoPreview) {
-    return;
-  }
-
-  if (!urls.length) {
-    photoPreview.innerHTML = "<span>No photos selected</span>";
-    return;
-  }
-
-  photoPreview.innerHTML = urls
-    .map((url) => `<img src="${escapeHtml(getDisplayPhotoUrl(url))}" alt="Selected photo preview" />`)
-    .join("");
+  getModuleState(route).photoEditor.setExisting(urls);
 }
 
 function setLoading(route, isLoading) {
@@ -533,7 +522,7 @@ async function saveRecord(route, event) {
 
   try {
     const uploadedPhotos = await uploadPhotos(route, selectedFiles);
-    const photoUrls = [...existingPhotos, ...uploadedPhotos];
+    const photoUrls = [...(id ? moduleState.photoEditor.getExisting() : []), ...uploadedPhotos];
     const payload = getPayload(route, form, photoUrls, existingRecord?.home_order ?? 100);
     const operation = id ? `${route} update` : `${route} insert`;
     const request = id
@@ -670,8 +659,7 @@ function handleModuleClick(route, event) {
 }
 
 function handlePhotoPreview(route, event) {
-  const urls = Array.from(event.target.files || []).map((file) => URL.createObjectURL(file));
-  showPhotoPreview(route, urls);
+  getModuleState(route).photoEditor.setPending(event.target.files);
 }
 
 function initModule(route) {
